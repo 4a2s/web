@@ -8,6 +8,8 @@ import {
   readPendingAuthCookieValue,
 } from '../../lib/keycloak-server';
 
+export const prerender = false;
+
 export const GET = async ({ cookies, url }: any) => {
   const code = url.searchParams.get('code');
   const returnedState = url.searchParams.get('state');

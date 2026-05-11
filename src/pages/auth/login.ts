@@ -8,6 +8,8 @@ import {
   normalizeReturnTo,
 } from '../../lib/keycloak-server';
 
+export const prerender = false;
+
 export const GET = async ({ cookies, url }: any) => {
   const returnTo = normalizeReturnTo(url.searchParams.get('returnTo'));
   const state = crypto.randomUUID();
