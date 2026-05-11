@@ -18,7 +18,8 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
     if (!isSessionValid(session)) {
       const returnTo = normalizeReturnTo(`${pathname}${search}`);
-      const loginUrl = new URL('/auth/login', getAppOrigin());
+      const origin = context.url.origin; // use request origin (e.g. https://4a2s.ch)
+      const loginUrl = new URL('/auth/login', origin);
 
       loginUrl.searchParams.set('returnTo', returnTo || DEFAULT_RETURN_TO);
 

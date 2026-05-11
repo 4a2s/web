@@ -28,7 +28,7 @@ export const KEYCLOAK_SESSION_COOKIE = 'portal:keycloak:session';
 export const DEFAULT_RETURN_TO = '/private/service';
 
 const DEFAULT_ISSUER = 'https://auth.4a2s.ch/realms/master';
-const DEFAULT_APP_ORIGIN = 'https://auth.4a2s.ch';
+const DEFAULT_APP_ORIGIN = 'https://4a2s.ch';
 
 function getAppOriginConfig() {
   return import.meta.env.KEYCLOAK_APP_ORIGIN ?? DEFAULT_APP_ORIGIN;
