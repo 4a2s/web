@@ -1,6 +1,17 @@
 ---
 const title = 'Portail des services';
 
+const session = Astro.locals.session;
+const currentPath = `${Astro.url.pathname}${Astro.url.search}`;
+const loginHref = `/auth/login?returnTo=${encodeURIComponent(currentPath)}`;
+const logoutHref = '/auth/logout';
+const sessionLabel = session
+  ? `Session active jusqu’au ${new Intl.DateTimeFormat('fr-FR', {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+    }).format(new Date(session.expiresAt))}`
+  : 'Aucune session détectée.';
+
 const services = [
   {
     name: 'Nextcloud',
@@ -63,10 +74,6 @@ const services = [
           linear-gradient(180deg, #0f172a 0%, #050b16 100%);
         color: var(--text);
         padding: 24px;
-      }
-
-      body:not([data-ready='true']) {
-        visibility: hidden;
       }
 
       .shell {
@@ -233,19 +240,18 @@ const services = [
         <p class="eyebrow">Portail privé</p>
         <h1>Services déployés, derrière Keycloak.</h1>
         <p class="intro">
-          Cette page sert de tableau de bord aux services internes. Le visiteur passe d’abord par
-          Keycloak, puis revient ici avec une session locale conservée dans le navigateur.
+          Cette page sert de tableau de bord aux services internes. La session est créée côté
+          serveur, stockée dans un cookie HttpOnly, puis validée par le middleware Astro avant
+          d’afficher les ressources privées.
         </p>
 
         <div class="meta">
-          <a class="button primary" id="login-link" href="/auth/login?returnTo=/private/service">
-            Se connecter via Keycloak
-          </a>
+          <a class="button primary" href={loginHref}>Se connecter via Keycloak</a>
           <a class="chip" href="/">Retour au site</a>
-          <button class="chip" id="logout-button" type="button">Se déconnecter</button>
+          <a class="chip" href={logoutHref}>Se déconnecter</a>
         </div>
 
-        <div class="toast" id="auth-state">Vérification de la session en cours…</div>
+        <div class="toast">{sessionLabel}</div>
       </section>
 
       <section>
@@ -274,54 +280,5 @@ const services = [
         </div>
       </section>
     </main>
-
-    <script type="module">
-      import {
-        buildLogoutUrl,
-        clearSession,
-        isSessionValid,
-        KEYCLOAK_STORAGE_KEYS,
-        readSession,
-      } from '../../lib/keycloak';
-
-      const authState = document.getElementById('auth-state');
-      const loginLink = document.getElementById('login-link');
-      const logoutButton = document.getElementById('logout-button');
-      const session = readSession();
-      const currentPath = `${window.location.pathname}${window.location.search}`;
-
-      document.body.dataset.ready = 'true';
-
-      if (!isSessionValid(session)) {
-        if (authState) {
-          authState.textContent = 'Aucune session active. Redirection vers Keycloak…';
-        }
-
-        if (loginLink) {
-          loginLink.setAttribute('href', `/auth/login?returnTo=${encodeURIComponent(currentPath)}`);
-        }
-
-        window.location.replace(`/auth/login?returnTo=${encodeURIComponent(currentPath)}`);
-      } else {
-        if (authState) {
-          authState.textContent = 'Session active. Tu peux ouvrir les services ci-dessous.';
-        }
-      }
-
-      logoutButton?.addEventListener('click', () => {
-        const redirectUri = `${window.location.origin}/`;
-        const logoutUrl = buildLogoutUrl({
-          idTokenHint: session?.idToken,
-          postLogoutRedirectUri: redirectUri,
-        });
-
-        clearSession();
-        sessionStorage.removeItem(KEYCLOAK_STORAGE_KEYS.state);
-        sessionStorage.removeItem(KEYCLOAK_STORAGE_KEYS.verifier);
-        sessionStorage.removeItem(KEYCLOAK_STORAGE_KEYS.returnTo);
-
-        window.location.assign(logoutUrl);
-      });
-    </script>
   </body>
 </html>
