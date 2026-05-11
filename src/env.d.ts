@@ -9,6 +9,7 @@ declare global {
 }
 
 interface ImportMetaEnv {
+  readonly KEYCLOAK_APP_ORIGIN?: string;
   readonly KEYCLOAK_ISSUER?: string;
   readonly KEYCLOAK_CLIENT_ID?: string;
   readonly KEYCLOAK_CLIENT_SECRET?: string;

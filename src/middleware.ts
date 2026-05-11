@@ -2,6 +2,7 @@ import { defineMiddleware } from 'astro:middleware';
 
 import {
   DEFAULT_RETURN_TO,
+  getAppOrigin,
   KEYCLOAK_AUTH_COOKIE,
   KEYCLOAK_SESSION_COOKIE,
   isSessionValid,
@@ -20,7 +21,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
       context.cookies.delete(KEYCLOAK_AUTH_COOKIE, { path: '/' });
 
       const returnTo = normalizeReturnTo(`${pathname}${search}`);
-      const loginUrl = new URL('/auth/login', context.url);
+      const loginUrl = new URL('/auth/login', getAppOrigin());
 
       loginUrl.searchParams.set('returnTo', returnTo || DEFAULT_RETURN_TO);
 

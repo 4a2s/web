@@ -3,6 +3,7 @@ import {
   createCodeChallenge,
   createCodeVerifier,
   createPendingAuthCookieValue,
+  getAppOrigin,
   getCookieOptions,
   KEYCLOAK_AUTH_COOKIE,
   normalizeReturnTo,
@@ -15,7 +16,7 @@ export const GET = async ({ cookies, url }: any) => {
   const state = crypto.randomUUID();
   const verifier = createCodeVerifier();
   const challenge = await createCodeChallenge(verifier);
-  const redirectUri = new URL('/auth/callback', url).toString();
+  const redirectUri = new URL('/auth/callback', getAppOrigin()).toString();
   const authorizeUrl = buildAuthorizeUrl({
     redirectUri,
     state,

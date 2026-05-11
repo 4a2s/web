@@ -2,6 +2,7 @@ import {
   buildSessionFromTokens,
   createSessionCookieValue,
   exchangeCodeForTokens,
+  getAppOrigin,
   getCookieOptions,
   KEYCLOAK_AUTH_COOKIE,
   KEYCLOAK_SESSION_COOKIE,
@@ -30,7 +31,7 @@ export const GET = async ({ cookies, url }: any) => {
     const tokens = await exchangeCodeForTokens({
       code,
       codeVerifier: pending.verifier,
-      redirectUri: new URL('/auth/callback', url).toString(),
+      redirectUri: new URL('/auth/callback', getAppOrigin()).toString(),
     });
 
     const session = buildSessionFromTokens(tokens);
@@ -42,7 +43,7 @@ export const GET = async ({ cookies, url }: any) => {
     );
     cookies.delete(KEYCLOAK_AUTH_COOKIE, { path: '/' });
 
-    return Response.redirect(new URL(pending.returnTo, url).toString(), 302);
+    return Response.redirect(new URL(pending.returnTo, getAppOrigin()).toString(), 302);
   } catch (error) {
     cookies.delete(KEYCLOAK_AUTH_COOKIE, { path: '/' });
     cookies.delete(KEYCLOAK_SESSION_COOKIE, { path: '/' });
