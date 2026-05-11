@@ -26,6 +26,7 @@ export interface PendingAuthState {
 export const KEYCLOAK_AUTH_COOKIE = 'portal:keycloak:auth';
 export const KEYCLOAK_SESSION_COOKIE = 'portal:keycloak:session';
 export const DEFAULT_RETURN_TO = '/private/service';
+export const PENDING_AUTH_TTL_MS = 10 * 60 * 1000;
 
 const DEFAULT_ISSUER = 'https://auth.4a2s.ch/realms/master';
 const DEFAULT_APP_ORIGIN = 'https://4a2s.ch';
@@ -194,6 +195,10 @@ export async function readPendingAuthCookieValue(rawValue: string | null | undef
     returnTo: normalizeReturnTo(value.returnTo),
     createdAt: typeof value.createdAt === 'number' ? value.createdAt : Date.now(),
   } satisfies PendingAuthState;
+}
+
+export function isPendingAuthFresh(pending: PendingAuthState) {
+  return Date.now() - pending.createdAt <= PENDING_AUTH_TTL_MS;
 }
 
 export async function createSessionCookieValue(session: StoredKeycloakSession) {

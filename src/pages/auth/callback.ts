@@ -3,9 +3,9 @@ import {
   createSessionCookieValue,
   exchangeCodeForTokens,
   getCookieDomain,
-  getCookieOptions,
   KEYCLOAK_AUTH_COOKIE,
   KEYCLOAK_SESSION_COOKIE,
+  isPendingAuthFresh,
   readPendingAuthCookieValue,
 } from '../../lib/keycloak-server';
 
@@ -21,7 +21,7 @@ export const GET = async ({ cookies, url }: any) => {
 
   const pending = await readPendingAuthCookieValue(cookies.get(KEYCLOAK_AUTH_COOKIE)?.value);
 
-  if (!pending || pending.state !== returnedState) {
+  if (!pending || !isPendingAuthFresh(pending) || pending.state !== returnedState) {
     return new Response('L’état OAuth2 ne correspond pas à la demande initiale.', { status: 400 });
   }
 
@@ -63,12 +63,14 @@ export const GET = async ({ cookies, url }: any) => {
       .filter(Boolean)
       .join('; ');
 
+    const headers = new Headers();
+    headers.set('Location', new URL(pending.returnTo, url.origin).toString());
+    headers.append('Set-Cookie', setSession);
+    headers.append('Set-Cookie', clearAuth);
+
     return new Response(null, {
       status: 302,
-      headers: {
-        Location: new URL(pending.returnTo, url.origin).toString(),
-        'Set-Cookie': `${setSession}; ${clearAuth}`,
-      },
+      headers,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Impossible de finaliser la session.';

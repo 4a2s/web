@@ -3,27 +3,37 @@ import {
   createCodeChallenge,
   createCodeVerifier,
   createPendingAuthCookieValue,
+  isPendingAuthFresh,
   getCookieDomain,
   getCookieOptions,
   KEYCLOAK_AUTH_COOKIE,
   normalizeReturnTo,
+  readPendingAuthCookieValue,
 } from '../../lib/keycloak-server';
 
 export const prerender = false;
 
 export const GET = async ({ cookies, url }: any) => {
   const returnTo = normalizeReturnTo(url.searchParams.get('returnTo'));
-  const state = crypto.randomUUID();
-  const verifier = createCodeVerifier();
-  const challenge = await createCodeChallenge(verifier);
+  const existingPending = await readPendingAuthCookieValue(cookies.get(KEYCLOAK_AUTH_COOKIE)?.value);
+  const pending = existingPending && isPendingAuthFresh(existingPending)
+    ? existingPending
+    : {
+        state: crypto.randomUUID(),
+        verifier: createCodeVerifier(),
+        returnTo,
+        createdAt: Date.now(),
+      };
+
+  const challenge = await createCodeChallenge(pending.verifier);
   const redirectUri = new URL('/auth/callback', url.origin).toString();
   const authorizeUrl = buildAuthorizeUrl({
     redirectUri,
-    state,
+    state: pending.state,
     codeChallenge: challenge,
   });
 
-  const cookieValue = await createPendingAuthCookieValue({ state, verifier, returnTo });
+  const cookieValue = await createPendingAuthCookieValue(pending);
   const maxAge = 10 * 60; // seconds
   const secure = url.protocol === 'https:';
   const domain = getCookieDomain(url);
