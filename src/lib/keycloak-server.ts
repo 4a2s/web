@@ -30,9 +30,12 @@ export const DEFAULT_RETURN_TO = '/private/service';
 const DEFAULT_ISSUER = 'https://auth.4a2s.ch/realms/master';
 const DEFAULT_APP_ORIGIN = 'https://auth.4a2s.ch';
 
+function getAppOriginConfig() {
+  return import.meta.env.KEYCLOAK_APP_ORIGIN ?? DEFAULT_APP_ORIGIN;
+}
+
 function getRequiredConfig() {
   const issuer = import.meta.env.KEYCLOAK_ISSUER ?? DEFAULT_ISSUER;
-  const appOrigin = import.meta.env.KEYCLOAK_APP_ORIGIN ?? DEFAULT_APP_ORIGIN;
   const clientId = import.meta.env.KEYCLOAK_CLIENT_ID;
   const clientSecret = import.meta.env.KEYCLOAK_CLIENT_SECRET;
   const cookieSecret = import.meta.env.KEYCLOAK_COOKIE_SECRET;
@@ -51,7 +54,7 @@ function getRequiredConfig() {
     throw new Error('Missing Keycloak config. Define KEYCLOAK_COOKIE_SECRET in your environment.');
   }
 
-  return { issuer, appOrigin, clientId, clientSecret, cookieSecret };
+  return { issuer, clientId, clientSecret, cookieSecret };
 }
 
 export function getKeycloakIssuer() {
@@ -71,7 +74,7 @@ export function getKeycloakCookieSecret() {
 }
 
 export function getAppOrigin() {
-  return getRequiredConfig().appOrigin;
+  return getAppOriginConfig();
 }
 
 export function buildAuthorizeUrl(params: {
