@@ -1,6 +1,4 @@
-import type { APIRoute } from 'astro';
-
-export const GET: APIRoute = () => {
+export const GET = () => {
   return new Response(
     JSON.stringify({
       subject: 'acct:antoine@4a2s.ch',
