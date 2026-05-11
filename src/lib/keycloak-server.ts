@@ -242,13 +242,24 @@ export async function exchangeCodeForTokens(params: {
 }
 
 export function getCookieOptions(url: URL, maxAgeSeconds?: number) {
+  const domain = getCookieDomain(url);
+
   return {
     httpOnly: true,
     secure: url.protocol === 'https:',
     sameSite: 'lax' as const,
     path: '/',
+    domain,
     maxAge: maxAgeSeconds,
   };
+}
+
+export function getCookieDomain(url: URL) {
+  if (url.hostname === '4a2s.ch' || url.hostname.endsWith('.4a2s.ch')) {
+    return '.4a2s.ch';
+  }
+
+  return undefined;
 }
 
 function base64UrlEncode(value: Uint8Array) {

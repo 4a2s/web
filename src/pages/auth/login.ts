@@ -3,6 +3,7 @@ import {
   createCodeChallenge,
   createCodeVerifier,
   createPendingAuthCookieValue,
+  getCookieDomain,
   getCookieOptions,
   KEYCLOAK_AUTH_COOKIE,
   normalizeReturnTo,
@@ -25,10 +26,19 @@ export const GET = async ({ cookies, url }: any) => {
   const cookieValue = await createPendingAuthCookieValue({ state, verifier, returnTo });
   const maxAge = 10 * 60; // seconds
   const secure = url.protocol === 'https:';
+  const domain = getCookieDomain(url);
 
-  const setCookie = `${KEYCLOAK_AUTH_COOKIE}=${encodeURIComponent(cookieValue)}; Path=/; HttpOnly; SameSite=Lax; ${
-    secure ? 'Secure; ' : ''
-  }Max-Age=${maxAge}`;
+  const setCookie = [
+    `${KEYCLOAK_AUTH_COOKIE}=${encodeURIComponent(cookieValue)}`,
+    'Path=/',
+    'HttpOnly',
+    'SameSite=Lax',
+    secure ? 'Secure' : null,
+    domain ? `Domain=${domain}` : null,
+    `Max-Age=${maxAge}`,
+  ]
+    .filter(Boolean)
+    .join('; ');
 
   return new Response(null, {
     status: 302,

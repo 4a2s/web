@@ -2,6 +2,7 @@ import {
   buildSessionFromTokens,
   createSessionCookieValue,
   exchangeCodeForTokens,
+  getCookieDomain,
   getCookieOptions,
   KEYCLOAK_AUTH_COOKIE,
   KEYCLOAK_SESSION_COOKIE,
@@ -36,13 +37,31 @@ export const GET = async ({ cookies, url }: any) => {
     const sessionValue = await createSessionCookieValue(session);
     const maxAge = Math.max(60, tokens.expires_in);
     const secure = url.protocol === 'https:';
+    const domain = getCookieDomain(url);
 
-    const setSession = `${KEYCLOAK_SESSION_COOKIE}=${encodeURIComponent(
-      sessionValue,
-    )}; Path=/; HttpOnly; SameSite=Lax; ${secure ? 'Secure; ' : ''}Max-Age=${maxAge}`;
-    const clearAuth = `${KEYCLOAK_AUTH_COOKIE}=; Path=/; HttpOnly; SameSite=Lax; ${
-      secure ? 'Secure; ' : ''
-    }Max-Age=0`;
+    const setSession = [
+      `${KEYCLOAK_SESSION_COOKIE}=${encodeURIComponent(sessionValue)}`,
+      'Path=/',
+      'HttpOnly',
+      'SameSite=Lax',
+      secure ? 'Secure' : null,
+      domain ? `Domain=${domain}` : null,
+      `Max-Age=${maxAge}`,
+    ]
+      .filter(Boolean)
+      .join('; ');
+
+    const clearAuth = [
+      `${KEYCLOAK_AUTH_COOKIE}=`,
+      'Path=/',
+      'HttpOnly',
+      'SameSite=Lax',
+      secure ? 'Secure' : null,
+      domain ? `Domain=${domain}` : null,
+      'Max-Age=0',
+    ]
+      .filter(Boolean)
+      .join('; ');
 
     return new Response(null, {
       status: 302,
