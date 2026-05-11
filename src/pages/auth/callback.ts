@@ -16,14 +16,12 @@ export const GET = async ({ cookies, url }: any) => {
   const returnedState = url.searchParams.get('state');
 
   if (!code || !returnedState) {
-    cookies.delete(KEYCLOAK_AUTH_COOKIE, { path: '/' });
     return new Response('Réponse Keycloak incomplète.', { status: 400 });
   }
 
   const pending = await readPendingAuthCookieValue(cookies.get(KEYCLOAK_AUTH_COOKIE)?.value);
 
   if (!pending || pending.state !== returnedState) {
-    cookies.delete(KEYCLOAK_AUTH_COOKIE, { path: '/' });
     return new Response('L’état OAuth2 ne correspond pas à la demande initiale.', { status: 400 });
   }
 
@@ -36,18 +34,25 @@ export const GET = async ({ cookies, url }: any) => {
 
     const session = buildSessionFromTokens(tokens);
 
-    cookies.set(
-      KEYCLOAK_SESSION_COOKIE,
-      await createSessionCookieValue(session),
-      getCookieOptions(url, Math.max(60, tokens.expires_in)),
-    );
-    cookies.delete(KEYCLOAK_AUTH_COOKIE, { path: '/' });
+    const sessionValue = await createSessionCookieValue(session);
+    const maxAge = Math.max(60, tokens.expires_in);
+    const secure = getAppOrigin().startsWith('https');
 
-    return Response.redirect(new URL(pending.returnTo, getAppOrigin()).toString(), 302);
+    const setSession = `${KEYCLOAK_SESSION_COOKIE}=${encodeURIComponent(
+      sessionValue,
+    )}; Path=/; HttpOnly; SameSite=Lax; ${secure ? 'Secure; ' : ''}Max-Age=${maxAge}`;
+    const clearAuth = `${KEYCLOAK_AUTH_COOKIE}=; Path=/; HttpOnly; SameSite=Lax; ${
+      secure ? 'Secure; ' : ''
+    }Max-Age=0`;
+
+    return new Response(null, {
+      status: 302,
+      headers: {
+        Location: new URL(pending.returnTo, getAppOrigin()).toString(),
+        'Set-Cookie': `${setSession}; ${clearAuth}`,
+      },
+    });
   } catch (error) {
-    cookies.delete(KEYCLOAK_AUTH_COOKIE, { path: '/' });
-    cookies.delete(KEYCLOAK_SESSION_COOKIE, { path: '/' });
-
     const message = error instanceof Error ? error.message : 'Impossible de finaliser la session.';
     return new Response(message, { status: 502 });
   }

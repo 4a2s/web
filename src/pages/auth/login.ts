@@ -23,11 +23,19 @@ export const GET = async ({ cookies, url }: any) => {
     codeChallenge: challenge,
   });
 
-  cookies.set(
-    KEYCLOAK_AUTH_COOKIE,
-    await createPendingAuthCookieValue({ state, verifier, returnTo }),
-    getCookieOptions(url, 10 * 60),
-  );
+  const cookieValue = await createPendingAuthCookieValue({ state, verifier, returnTo });
+  const maxAge = 10 * 60; // seconds
+  const secure = getAppOrigin().startsWith('https');
 
-  return Response.redirect(authorizeUrl, 302);
+  const setCookie = `${KEYCLOAK_AUTH_COOKIE}=${encodeURIComponent(cookieValue)}; Path=/; HttpOnly; SameSite=Lax; ${
+    secure ? 'Secure; ' : ''
+  }Max-Age=${maxAge}`;
+
+  return new Response(null, {
+    status: 302,
+    headers: {
+      Location: authorizeUrl,
+      'Set-Cookie': setCookie,
+    },
+  });
 };

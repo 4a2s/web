@@ -17,9 +17,6 @@ export const onRequest = defineMiddleware(async (context, next) => {
     const session = await readSessionCookieValue(context.cookies.get(KEYCLOAK_SESSION_COOKIE)?.value);
 
     if (!isSessionValid(session)) {
-      context.cookies.delete(KEYCLOAK_SESSION_COOKIE, { path: '/' });
-      context.cookies.delete(KEYCLOAK_AUTH_COOKIE, { path: '/' });
-
       const returnTo = normalizeReturnTo(`${pathname}${search}`);
       const loginUrl = new URL('/auth/login', getAppOrigin());
 
