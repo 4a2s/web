@@ -1,0 +1,185 @@
+---
+const title = 'Retour Keycloak';
+---
+
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>{title}</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #07111f;
+        --panel: rgba(15, 23, 42, 0.9);
+        --panel-border: rgba(148, 163, 184, 0.18);
+        --text: #e2e8f0;
+        --muted: #94a3b8;
+        --accent: #38bdf8;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        min-height: 100%;
+        margin: 0;
+      }
+
+      body {
+        font-family: system-ui, sans-serif;
+        background:
+          radial-gradient(circle at top left, rgba(56, 189, 248, 0.2), transparent 30%),
+          radial-gradient(circle at right bottom, rgba(14, 165, 233, 0.16), transparent 28%),
+          var(--bg);
+        color: var(--text);
+        display: grid;
+        place-items: center;
+        padding: 24px;
+      }
+
+      .panel {
+        width: min(100%, 620px);
+        border: 1px solid var(--panel-border);
+        border-radius: 28px;
+        background: var(--panel);
+        box-shadow: 0 24px 80px rgba(2, 6, 23, 0.45);
+        padding: 32px;
+        backdrop-filter: blur(18px);
+      }
+
+      .eyebrow {
+        text-transform: uppercase;
+        letter-spacing: 0.2em;
+        font-size: 0.75rem;
+        color: var(--accent);
+        margin: 0 0 12px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(1.8rem, 3vw, 3rem);
+        line-height: 1.05;
+      }
+
+      p {
+        margin: 16px 0 0;
+        color: var(--muted);
+        line-height: 1.6;
+      }
+
+      .status {
+        margin-top: 24px;
+        padding: 16px 18px;
+        border-radius: 18px;
+        background: rgba(15, 23, 42, 0.72);
+        border: 1px solid rgba(148, 163, 184, 0.14);
+        color: var(--text);
+      }
+
+      .actions {
+        margin-top: 24px;
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 46px;
+        padding: 0 18px;
+        border-radius: 999px;
+        border: 1px solid transparent;
+        font-weight: 700;
+        text-decoration: none;
+      }
+
+      .button.primary {
+        color: #04111d;
+        background: linear-gradient(135deg, #7dd3fc, #0ea5e9);
+      }
+
+      .button.secondary {
+        color: var(--text);
+        border-color: var(--panel-border);
+        background: rgba(15, 23, 42, 0.45);
+      }
+    </style>
+  </head>
+  <body>
+    <main class="panel">
+      <p class="eyebrow">Callback</p>
+      <h1>Finalisation de la session</h1>
+      <p>
+        La réponse de Keycloak est en cours de validation. Une fois le code échangé, tu seras
+        redirigé vers la page des services.
+      </p>
+
+      <div class="status" id="status">Lecture du retour Keycloak…</div>
+
+      <div class="actions">
+        <a class="button primary" id="continue-link" href="/private/service">Aller au portail</a>
+        <a class="button secondary" href="/auth/login">Recommencer</a>
+      </div>
+    </main>
+
+    <script type="module">
+      import {
+        clearPendingAuthState,
+        exchangeCodeForTokens,
+        readPendingAuthState,
+        saveSession,
+      } from '../../lib/keycloak';
+
+      const status = document.getElementById('status');
+      const continueLink = document.getElementById('continue-link');
+      const url = new URL(window.location.href);
+      const code = url.searchParams.get('code');
+      const returnedState = url.searchParams.get('state');
+
+      try {
+        if (!code || !returnedState) {
+          throw new Error('Réponse Keycloak incomplète.');
+        }
+
+        const pending = readPendingAuthState();
+
+        if (!pending.state || pending.state !== returnedState || !pending.verifier) {
+          throw new Error('L’état OAuth2 ne correspond pas à la demande initiale.');
+        }
+
+        const tokens = await exchangeCodeForTokens({
+          code,
+          codeVerifier: pending.verifier,
+          redirectUri: `${window.location.origin}/auth/callback`,
+        });
+
+        saveSession(tokens);
+        clearPendingAuthState();
+
+        const nextUrl = pending.returnTo || '/private/service';
+
+        if (continueLink) {
+          continueLink.setAttribute('href', nextUrl);
+        }
+
+        if (status) {
+          status.textContent = 'Connexion validée. Redirection vers le portail…';
+        }
+
+        window.location.replace(nextUrl);
+      } catch (error) {
+        if (status) {
+          status.textContent = error instanceof Error ? error.message : 'Impossible de finaliser la session.';
+        }
+
+        clearPendingAuthState();
+        continueLink?.setAttribute('href', '/auth/login');
+      }
+    </script>
+  </body>
+</html>
