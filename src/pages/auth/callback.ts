@@ -2,7 +2,6 @@ import {
   buildSessionFromTokens,
   createSessionCookieValue,
   exchangeCodeForTokens,
-  getAppOrigin,
   getCookieOptions,
   KEYCLOAK_AUTH_COOKIE,
   KEYCLOAK_SESSION_COOKIE,
@@ -29,14 +28,14 @@ export const GET = async ({ cookies, url }: any) => {
     const tokens = await exchangeCodeForTokens({
       code,
       codeVerifier: pending.verifier,
-      redirectUri: new URL('/auth/callback', getAppOrigin()).toString(),
+      redirectUri: new URL('/auth/callback', url.origin).toString(),
     });
 
     const session = buildSessionFromTokens(tokens);
 
     const sessionValue = await createSessionCookieValue(session);
     const maxAge = Math.max(60, tokens.expires_in);
-    const secure = getAppOrigin().startsWith('https');
+    const secure = url.protocol === 'https:';
 
     const setSession = `${KEYCLOAK_SESSION_COOKIE}=${encodeURIComponent(
       sessionValue,
@@ -48,7 +47,7 @@ export const GET = async ({ cookies, url }: any) => {
     return new Response(null, {
       status: 302,
       headers: {
-        Location: new URL(pending.returnTo, getAppOrigin()).toString(),
+        Location: new URL(pending.returnTo, url.origin).toString(),
         'Set-Cookie': `${setSession}; ${clearAuth}`,
       },
     });

@@ -3,7 +3,6 @@ import {
   createCodeChallenge,
   createCodeVerifier,
   createPendingAuthCookieValue,
-  getAppOrigin,
   getCookieOptions,
   KEYCLOAK_AUTH_COOKIE,
   normalizeReturnTo,
@@ -16,7 +15,7 @@ export const GET = async ({ cookies, url }: any) => {
   const state = crypto.randomUUID();
   const verifier = createCodeVerifier();
   const challenge = await createCodeChallenge(verifier);
-  const redirectUri = new URL('/auth/callback', getAppOrigin()).toString();
+  const redirectUri = new URL('/auth/callback', url.origin).toString();
   const authorizeUrl = buildAuthorizeUrl({
     redirectUri,
     state,
@@ -25,7 +24,7 @@ export const GET = async ({ cookies, url }: any) => {
 
   const cookieValue = await createPendingAuthCookieValue({ state, verifier, returnTo });
   const maxAge = 10 * 60; // seconds
-  const secure = getAppOrigin().startsWith('https');
+  const secure = url.protocol === 'https:';
 
   const setCookie = `${KEYCLOAK_AUTH_COOKIE}=${encodeURIComponent(cookieValue)}; Path=/; HttpOnly; SameSite=Lax; ${
     secure ? 'Secure; ' : ''
