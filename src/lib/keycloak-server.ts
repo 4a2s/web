@@ -224,15 +224,16 @@ export async function exchangeCodeForTokens(params: {
   codeVerifier: string;
   redirectUri: string;
 }) {
+  const { clientId, clientSecret } = getRequiredConfig();
   const response = await fetch(buildTokenEndpoint(), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
+      Authorization: `Basic ${base64Utf8(`${clientId}:${clientSecret}`)}`,
     },
     body: new URLSearchParams({
       grant_type: 'authorization_code',
-      client_id: getKeycloakClientId(),
-      client_secret: getKeycloakClientSecret(),
+      client_id: clientId,
       code: params.code,
       code_verifier: params.codeVerifier,
       redirect_uri: params.redirectUri,
@@ -240,7 +241,10 @@ export async function exchangeCodeForTokens(params: {
   });
 
   if (!response.ok) {
-    throw new Error(`Keycloak token exchange failed: ${response.status} ${response.statusText}`);
+    const responseBody = await response.text();
+    throw new Error(
+      `Keycloak token exchange failed: ${response.status} ${response.statusText}${responseBody ? ` - ${responseBody}` : ''}`,
+    );
   }
 
   return (await response.json()) as KeycloakTokens;
@@ -275,6 +279,17 @@ function base64UrlEncode(value: Uint8Array) {
   }
 
   return btoa(output).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+}
+
+function base64Utf8(value: string) {
+  const bytes = new TextEncoder().encode(value);
+  let output = '';
+
+  for (const byte of bytes) {
+    output += String.fromCharCode(byte);
+  }
+
+  return btoa(output);
 }
 
 function base64UrlDecode(value: string) {
