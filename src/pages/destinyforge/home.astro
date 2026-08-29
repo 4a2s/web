@@ -1,0 +1,126 @@
+---
+const servicesUrl = '/destinyforge/services';
+const joinUrl = 'https://auth-dev.4a2s.ch/realms/master/login-actions/registration';
+---
+
+<html lang="fr">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>DestinyForge</title>
+		<style>
+			:root {
+				color-scheme: dark;
+				--bg: #0b1020;
+				--panel: #121a33;
+				--text: #e8ecff;
+				--muted: #a9b3d6;
+				--accent: #7c8cff;
+				--accent-2: #9f7cff;
+			}
+
+			body {
+				margin: 0;
+				min-height: 100vh;
+				font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+				background: radial-gradient(circle at top, #182449 0%, var(--bg) 55%);
+				color: var(--text);
+			}
+
+			header {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				padding: 1.25rem 1.5rem;
+			}
+
+			.brand {
+				font-weight: 700;
+				letter-spacing: 0.04em;
+			}
+
+			.join {
+				display: inline-flex;
+				align-items: center;
+				gap: 0.5rem;
+				padding: 0.7rem 1rem;
+				border-radius: 999px;
+				background: linear-gradient(135deg, var(--accent), var(--accent-2));
+				color: white;
+				text-decoration: none;
+				font-weight: 600;
+				box-shadow: 0 10px 24px rgba(124, 140, 255, 0.25);
+			}
+
+			main {
+				max-width: 960px;
+				margin: 0 auto;
+				padding: 3rem 1.5rem 4rem;
+			}
+
+			.hero {
+				background: rgba(18, 26, 51, 0.85);
+				border: 1px solid rgba(255, 255, 255, 0.08);
+				border-radius: 24px;
+				padding: 2.5rem;
+				box-shadow: 0 20px 60px rgba(0, 0, 0, 0.28);
+			}
+
+			h1 {
+				margin: 0 0 1rem;
+				font-size: clamp(2rem, 4vw, 3.5rem);
+				line-height: 1.05;
+			}
+
+			p {
+				margin: 0 0 1.25rem;
+				color: var(--muted);
+				line-height: 1.65;
+				max-width: 60ch;
+			}
+
+			.actions {
+				display: flex;
+				gap: 1rem;
+				flex-wrap: wrap;
+				margin-top: 1.75rem;
+			}
+
+			.services {
+				display: inline-flex;
+				align-items: center;
+				padding: 0.85rem 1.15rem;
+				border-radius: 14px;
+				background: rgba(255, 255, 255, 0.06);
+				color: var(--text);
+				text-decoration: none;
+				border: 1px solid rgba(255, 255, 255, 0.08);
+			}
+
+			.services:hover,
+			.join:hover {
+				transform: translateY(-1px);
+			}
+		</style>
+	</head>
+	<body>
+		<header>
+			<div class="brand">DestinyForge</div>
+			<a class="join" href={joinUrl}>rejoindre</a>
+		</header>
+
+		<main>
+			<section class="hero">
+				<h1>Une plateforme simple pour découvrir et utiliser les services DestinyForge.</h1>
+				<p>
+					Cette page de présentation donne un accès rapide à la liste des services et
+					permet de rejoindre l'espace via l'inscription Keycloak avec les groupes.
+				</p>
+				<div class="actions">
+					<a class="services" href="https://cloud-dev.example.com">Nextcloud</a>
+					<a class="services" href="https://com-dev.example.com">Rocket.Chat</a>
+				</div>
+			</section>
+		</main>
+	</body>
+</html>
