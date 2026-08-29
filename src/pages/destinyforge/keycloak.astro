@@ -1,11 +1,14 @@
 ---
 const groups = [
-  { id: "son", name: "Musique" },
-  { id: "game_design", name: "Game Design" },
-  { id: "dev", name: "Développement" },
-  { id: "histoire", name: "Histoire" },
-  { id: "graphisme", name: "Graphisme" },
-]
+  { id: "f808c44a-0b60-49e4-9e0c-5ba3abe05c3b", name: "Musique" },
+  { id: "44adf2a0-7804-461e-9b38-e20be7d67830", name: "Game Design" },
+  { id: "415e4ff9-0b1f-4cb3-9c1f-f64e289d7f0c", name: "Développement" },
+  { id: "cfd6dfdf-c217-4021-92ef-9765ee635a17", name: "Histoire" },
+  { id: "9fd00f3e-c330-475e-8dba-55a6a1614dab", name: "Marketing" },
+];
+
+const success = Astro.url.searchParams.get("success");
+const error = Astro.url.searchParams.get("error");
 ---
 
 <h1>Choisir mes groupes</h1>
@@ -14,7 +17,19 @@ const groups = [
   Sélectionnez les groupes auxquels vous souhaitez appartenir.
 </p>
 
-<form>
+{success && (
+  <p>
+    Vos groupes ont bien été enregistrés.
+  </p>
+)}
+
+{error && (
+  <p>
+    Une erreur est survenue lors de l'enregistrement.
+  </p>
+)}
+
+<form method="POST" action="/api/groups">
   {
     groups.map((group) => (
       <label>
