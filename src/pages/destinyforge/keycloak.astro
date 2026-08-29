@@ -1,15 +1,33 @@
 ---
-const title = "Keycloak";
+const groups = [
+  { id: "son", name: "Son" },
+  { id: "3d", name: "3D" },
+  { id: "dev", name: "Développement" },
+  { id: "histoire", name: "Histoire" },
+];
 ---
 
-<html lang="fr">
-  <head>
-    <meta charset="UTF-8" />
-    <title>{title}</title>
-  </head>
+<h1>Choisir mes groupes</h1>
 
-  <body>
-    <h1>Keycloak</h1>
-    <p>Bienvenue sur la page Keycloak.</p>
-  </body>
-</html>
+<p>
+  Sélectionnez les groupes auxquels vous souhaitez appartenir.
+</p>
+
+<form>
+  {
+    groups.map((group) => (
+      <label>
+        <input
+          type="checkbox"
+          name="groups"
+          value={group.id}
+        />
+        {group.name}
+      </label>
+    ))
+  }
+
+  <button type="submit">
+    Enregistrer
+  </button>
+</form>
